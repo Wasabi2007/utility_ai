@@ -4,6 +4,115 @@
 #include "nanovg.h"
 #define NANOVG_GL3_IMPLEMENTATION
 #include "nanovg_gl.h"
+#include "../src/actor.hpp"
+#include "../src/action.hpp"
+#include "../src/scorer.hpp"
+#include "../src/action_data.hpp"
+
+
+struct vector{
+	float x;
+	float y;
+
+	vector(float x=0,float y=0):x(x),y(y){}
+
+	vector& operator+=(const vector& rhs){
+		x+=rhs.x;
+		y+=rhs.y;
+		return *this;
+	}
+	friend vector operator+(vector lhs,const vector& rhs){
+		lhs+=rhs;
+		return lhs;
+	}
+
+	vector& operator-=(const vector& rhs){
+		x-=rhs.x;
+		y-=rhs.y;
+		return *this;
+	}
+	friend vector operator-(vector lhs,const vector& rhs){
+		lhs-=rhs;
+		return lhs;
+	}
+
+	vector& operator*=(const float& rhs){
+		x*=rhs;
+		y*=rhs;
+		return *this;
+	}
+	friend vector operator*(vector lhs,const float& rhs){
+		lhs*=rhs;
+		return lhs;
+	}
+};
+
+inline bool operator==(const vector& lhs,const vector& rhs){return lhs.x==rhs.x && lhs.y==rhs.y;}
+inline bool operator!=(const vector& lhs, const vector& rhs){return !(lhs == rhs); }
+
+
+struct unit:public utility_ai::actor{
+	vector position;
+	vector velocity;
+
+	unit(const std::shared_ptr<utility_ai::decider> &actor_ai) : actor(actor_ai) {}
+
+	virtual void update(float dt){
+		utility_ai::actor::update();
+		position += velocity*dt;
+	}
+
+	void render(NVGcontext* vg){
+		nvgBeginPath(vg);
+		nvgRect(vg,position.x-50,position.y-50,100,100);
+		nvgFillColor(vg,NVGcolor{1,1,1,1});
+		nvgFill(vg);
+	}
+
+};
+
+static float dist(const vector& a, const vector& b){
+	return std::sqrt(a.x*b.x+a.y*b.y);
+}
+static float length(const vector& a){
+	return dist(a,a);
+}
+static vector nomalize(const vector& a){
+	return a*(1.0f/length(a));
+}
+
+class patrole : public utility_ai::action{
+private:
+	vector p1;
+	vector p2;
+	bool to1;
+public:
+	patrole(const vector& p1, const vector& p2):p1(p1),p2(p2),to1(true){
+
+	}
+	virtual bool execute(utility_ai::actor &a) override {
+		auto& u = static_cast<unit&>(a);
+		if(to1) {
+			auto velo = nomalize(p1-u.position);
+			u.velocity = velo*30.f;
+			if(dist(u.position,p1)<40.f){
+				to1 = false;
+				u.velocity = nomalize(p2-u.position)*30.f;
+			}
+		} else{
+			u.velocity = nomalize(p2-u.position)*30.f;
+			if(dist(u.position,p2)<40.f){
+				to1 = true;
+				u.velocity = nomalize(p1-u.position)*30.f;
+			}
+		}
+		return true;
+	}
+
+	virtual bool start(utility_ai::actor &a) override {
+		return true;
+	}
+};
 
 
 int main()
@@ -11,6 +120,12 @@ int main()
 	GLFWwindow* window;
 	NVGcontext* vg = NULL;
 	double prevt = 0, cpuTime = 0;
+
+
+	auto patrole_action = std::make_unique<patrole>(vector{200.f,200.f},vector{500.f,200.f});
+	std::shared_ptr<utility_ai::decider> default_ai = std::make_shared<utility_ai::decider>(std::move(patrole_action));
+	unit test_unit(default_ai);
+	test_unit.position.y = 200.f;
 
 	glewExperimental = GL_TRUE;
 
@@ -82,10 +197,11 @@ int main()
 
 		nvgBeginFrame(vg, winWidth, winHeight, pxRatio);
 
-		nvgBeginPath(vg);
-		nvgRect(vg,100,100,500,500);
-		nvgFillColor(vg,NVGcolor{1,1,1,1});
-		nvgFill(vg);
+		test_unit.update(dt);
+		test_unit.render(vg);
+
+		std::cout << "test_unit.position.x: " << test_unit.position.x<< " test_unit.position.y: " << test_unit.position.y << std::endl;
+		std::cout << "test_unit.velocity.x: " << test_unit.velocity.x<< " test_unit.velocity.y: " << test_unit.velocity.y << std::endl;
 
 		nvgEndFrame(vg);
 

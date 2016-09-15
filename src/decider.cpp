@@ -5,6 +5,7 @@
 #include <assert.h>
 #include "decider.hpp"
 #include "action.hpp"
+#include "scorer.hpp"
 
 namespace utility_ai{
 	std::shared_ptr<utility_ai::action> decider::chose(const utility_ai::actor &actor1) {
@@ -24,6 +25,6 @@ namespace utility_ai{
 
 	decider::decider(std::unique_ptr<action> start_action) {
 		assert(start_action);
-
+		actions.push_back(std::move(start_action));
 	}
 }

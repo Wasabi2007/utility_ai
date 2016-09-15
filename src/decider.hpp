@@ -17,8 +17,14 @@ namespace utility_ai {
 		decider(std::unique_ptr<action> start_action);
 		std::shared_ptr<action> chose(const actor& actor1);
 		template <typename T,typename ... ARGS>
-		void add_action(ARGS&&... args){
-			actions.push_back(std::make_shared<T>(std::forward(args)...));
+		std::shared_ptr<T> add_action(ARGS&&... args){
+			auto act = std::make_shared<T>(std::forward(args)...);
+			actions.push_back(act);
+			return act;
+		};
+
+		void add_action(std::shared_ptr<action> act){
+			actions.push_back(act);
 		};
 	};
 }

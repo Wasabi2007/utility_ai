@@ -15,7 +15,7 @@ namespace utility_ai {
 	void actor::update() {
 		auto action_ = decider_->chose(*this);
 		if(action_ != current_action_){
-			action_ = current_action_;
+			current_action_ = action_;
 			action_->start(*this);
 		}
 		action_ ->execute(*this);
