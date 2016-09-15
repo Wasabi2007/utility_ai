@@ -72,10 +72,10 @@ struct unit:public utility_ai::actor{
 };
 
 static float dist(const vector& a, const vector& b){
-	return std::sqrt(a.x*b.x+a.y*b.y);
+	return std::sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y));
 }
 static float length(const vector& a){
-	return dist(a,a);
+	return std::sqrt((a.x*a.x)+(a.y*a.y));
 }
 static vector nomalize(const vector& a){
 	return a*(1.0f/length(a));
@@ -199,9 +199,6 @@ int main()
 
 		test_unit.update(dt);
 		test_unit.render(vg);
-
-		std::cout << "test_unit.position.x: " << test_unit.position.x<< " test_unit.position.y: " << test_unit.position.y << std::endl;
-		std::cout << "test_unit.velocity.x: " << test_unit.velocity.x<< " test_unit.velocity.y: " << test_unit.velocity.y << std::endl;
 
 		nvgEndFrame(vg);
 
