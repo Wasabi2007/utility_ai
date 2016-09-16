@@ -24,4 +24,8 @@ namespace utility_ai {
 	action_data &actor::get_action_data() const {
 		return *action_data_.get();
 	}
+
+	void actor::set_action_data(std::unique_ptr<action_data>&& data) {
+		action_data_ = std::move(data);
+	}
 }

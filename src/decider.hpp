@@ -14,7 +14,7 @@ namespace utility_ai {
 	private:
 		std::vector<std::shared_ptr<action>> actions;
 	public:
-		decider(std::unique_ptr<action> start_action);
+		decider(std::unique_ptr<action>&& start_action);
 		std::shared_ptr<action> chose(const actor& actor1);
 		template <typename T,typename ... ARGS>
 		std::shared_ptr<T> add_action(ARGS&&... args){

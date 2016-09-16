@@ -23,8 +23,8 @@ namespace utility_ai{
 		return current_action;
 	}
 
-	decider::decider(std::unique_ptr<action> start_action) {
+	decider::decider(std::unique_ptr<action>&& start_action) {
 		assert(start_action);
-		actions.push_back(std::move(start_action));
+		actions.emplace_back(std::move(start_action));
 	}
 }

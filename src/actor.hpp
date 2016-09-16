@@ -16,6 +16,7 @@ namespace utility_ai {
 	public:
 		actor(std::shared_ptr<decider> actor_ai);
 		action_data& get_action_data() const;
+		void set_action_data(std::unique_ptr<action_data>&& data);
 
 		virtual void update();
 	};
