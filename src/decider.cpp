@@ -3,6 +3,7 @@
 //
 
 #include <assert.h>
+#include <algorithm>
 #include "decider.hpp"
 
 namespace utility_ai{
@@ -10,18 +11,10 @@ namespace utility_ai{
 		if(actions.size() <= 0)
 			return nullptr;
 
-		int max_score = actions.at(0)->score(actor1);
-		auto current_action = actions.at(0);
-
-		for(auto& action1 : actions){
-			int score = action1->score(actor1);
-			if(score > max_score){
-				max_score = score;
-				current_action = action1;
-			}
-		}
-
-		return current_action;
+		auto max_elem = std::max_element (actions.begin(),actions.end(),[&actor1](auto& action1,auto& action2){
+			return action1->score(actor1)<action2->score(actor1);
+		});
+		return *max_elem;
 	}
 
 	decider::decider() {
