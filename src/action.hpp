@@ -19,7 +19,7 @@ namespace utility_ai{
 		virtual bool start(actor& a) = 0;
 		template <typename T,typename ... ARGS>
 		void add_scorer(ARGS&&... args){
-			scorers.push_back(std::make_unique<T>(std::forward(args)...));
+			scorers.push_back(std::make_unique<T>(args...));
 		};
 	};
 }
