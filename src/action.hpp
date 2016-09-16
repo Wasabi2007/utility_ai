@@ -6,20 +6,23 @@
 
 #include <vector>
 #include <memory>
+#include "scorer.hpp"
 
 namespace utility_ai{
 	class actor;
-	class scorer;
-	class action{
+	class action : public scorer{
 	private:
 		std::vector<std::unique_ptr<scorer>> scorers;
 	public:
-		int score(const actor& a) const ;
+		virtual int score(const actor& a) const override;
 		virtual bool execute(actor& a) = 0;
-		virtual bool start(actor& a) = 0;
 		template <typename T,typename ... ARGS>
-		void add_scorer(ARGS&&... args){
+		action& add_scorer(ARGS&&... args){
 			scorers.push_back(std::make_unique<T>(args...));
+			return *this;
 		};
+
+		const scorer& at(size_t index) const ;
+		size_t size();
 	};
 }

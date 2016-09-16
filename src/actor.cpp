@@ -2,23 +2,19 @@
 // Created by jerry on 14.09.16.
 //
 
-#include <assert.h>
 #include "actor.hpp"
-#include "action.hpp"
 #include "action_data.hpp"
 
 namespace utility_ai {
-	actor::actor(std::shared_ptr<utility_ai::decider> actor_ai):decider_(actor_ai) {
-		assert(actor_ai);
+	actor::actor() {
 	}
 
 	void actor::update() {
-		auto action_ = decider_->chose(*this);
-		if(action_ != current_action_){
-			current_action_ = action_;
-			action_->start(*this);
+		for(size_t i = 0; i < decider_.size();i++) {
+			if(decider_action_.at(i) == nullptr || decider_action_.at(i)->execute(*this)){
+				decider_action_[i] = decider_.at(i)->chose(*this);
+			}
 		}
-		action_ ->execute(*this);
 	}
 
 	action_data &actor::get_action_data() const {
@@ -27,5 +23,19 @@ namespace utility_ai {
 
 	void actor::set_action_data(std::unique_ptr<action_data>&& data) {
 		action_data_ = std::move(data);
+	}
+
+	std::shared_ptr<decider> actor::at(size_t index) {
+		return decider_.at(index);
+	}
+
+	size_t actor::size() {
+		return decider_.size();
+	}
+
+	actor &actor::add_decider(std::shared_ptr<decider>& d) {
+		decider_.emplace_back(d);
+		decider_action_.emplace_back();
+		return *this;
 	}
 }

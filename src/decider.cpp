@@ -4,11 +4,12 @@
 
 #include <assert.h>
 #include "decider.hpp"
-#include "action.hpp"
-#include "scorer.hpp"
 
 namespace utility_ai{
 	std::shared_ptr<utility_ai::action> decider::chose(const utility_ai::actor &actor1) {
+		if(actions.size() <= 0)
+			return nullptr;
+
 		int max_score = actions.at(0)->score(actor1);
 		auto current_action = actions.at(0);
 
@@ -23,8 +24,19 @@ namespace utility_ai{
 		return current_action;
 	}
 
-	decider::decider(std::unique_ptr<action>&& start_action) {
-		assert(start_action);
-		actions.emplace_back(std::move(start_action));
+	decider::decider() {
+	}
+
+	bool decider::execute(actor &a) {
+		auto act = chose(a);
+		return act->execute(a);
+	}
+
+	std::shared_ptr<action> decider::action_at(size_t index) const {
+		return actions.at(index);
+	}
+
+	size_t decider::action_size() {
+		return actions.size();
 	}
 }

@@ -11,4 +11,12 @@ namespace utility_ai{
 		}
 		return result;
 	}
+
+	const scorer &action::at(size_t index) const {
+		return *scorers.at(index);
+	}
+
+	size_t action::size() {
+		return scorers.size();
+	}
 }
