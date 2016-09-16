@@ -50,12 +50,19 @@ struct vector{
 inline bool operator==(const vector& lhs,const vector& rhs){return lhs.x==rhs.x && lhs.y==rhs.y;}
 inline bool operator!=(const vector& lhs, const vector& rhs){return !(lhs == rhs); }
 
+struct test_unit_data : utility_ai::action_data{
+	NVGcolor unit_color;
+};
 
 struct unit:public utility_ai::actor{
 	vector position;
 	vector velocity;
 
-	unit(const std::shared_ptr<utility_ai::decider> &actor_ai) : actor(actor_ai) {}
+	unit(){
+		set_action_data(std::make_unique<test_unit_data>());
+		auto& data = static_cast<test_unit_data&>(get_action_data());
+		data.unit_color = NVGcolor{1.f,1.f,1.f,1.f};
+	}
 
 	virtual void update(float dt){
 		utility_ai::actor::update();
@@ -63,9 +70,10 @@ struct unit:public utility_ai::actor{
 	}
 
 	void render(NVGcontext* vg){
+		auto& data = static_cast<test_unit_data&>(get_action_data());
 		nvgBeginPath(vg);
 		nvgRect(vg,position.x-50,position.y-50,100,100);
-		nvgFillColor(vg,NVGcolor{1,1,1,1});
+		nvgFillColor(vg,data.unit_color);
 		nvgFill(vg);
 	}
 
@@ -108,10 +116,6 @@ public:
 		}
 		return true;
 	}
-
-	virtual bool start(utility_ai::actor &a) override {
-		return true;
-	}
 };
 
 class chase_mouse : public utility_ai::action{
@@ -132,17 +136,15 @@ public:
 		u.velocity = velo*30.f;
 		return true;
 	}
-
-	virtual bool start(utility_ai::actor &a) override {
-		return true;
-	}
 };
 class mouse_distance : public utility_ai::scorer {
 private:
 	GLFWwindow* window;
-	float distance;
+	float min_distance;
+	float max_distance;
 public:
-	mouse_distance(GLFWwindow* window,float distance):window(window),distance(distance){
+	mouse_distance(GLFWwindow* window,float min_distance,float max_distance)
+			:window(window),min_distance(min_distance),max_distance(max_distance){
 
 	}
 	virtual int score(const utility_ai::actor &a) const override {
@@ -152,13 +154,28 @@ public:
 
 		glfwGetCursorPos(window,&x,&y);
 		vector mouse_pos(x,y);
-		if(distance > dist(mouse_pos,u.position)){
+		auto dis = dist(mouse_pos,u.position);
+		if(max_distance > dis && min_distance < dis){
 			return 100;
 		}
 		return 0;
 	}
 };
 
+
+class change_color : public utility_ai::action{
+private:
+	NVGcolor color;
+public:
+	change_color(NVGcolor color):color(color){
+
+	}
+	virtual bool execute(utility_ai::actor &a) override {
+		auto& data = static_cast<test_unit_data&>(a.get_action_data());
+		data.unit_color = color;
+		return true;
+	}
+};
 
 
 int main()
@@ -208,10 +225,24 @@ int main()
 	glfwSetTime(0);
 	prevt = glfwGetTime();
 
-	auto patrole_action = std::make_unique<patrole>(vector{200.f,200.f},vector{500.f,200.f});
-	std::shared_ptr<utility_ai::decider> default_ai = std::make_shared<utility_ai::decider>(std::move(patrole_action));
-	default_ai->add_action<chase_mouse>(window)->add_scorer<mouse_distance>(window,100);
-	unit test_unit(default_ai);
+	std::shared_ptr<utility_ai::decider> default_ai = std::make_shared<utility_ai::decider>();
+	default_ai->add_action<patrole>(vector{200.f,200.f},vector{500.f,200.f}).add_action<chase_mouse>(window);
+	default_ai->action_at(1)->add_scorer<mouse_distance>(window,0,100);
+
+
+	std::shared_ptr<utility_ai::decider> color_ai = std::make_shared<utility_ai::decider>();
+	color_ai->add_action<change_color>(NVGcolor{1,1,1,1})
+			.add_action<change_color>(NVGcolor{1,0,0,1})
+			.add_action<change_color>(NVGcolor{0,1,0,1});
+
+	color_ai->action_at(1)->add_scorer<mouse_distance>(window,0,100);
+	color_ai->action_at(2)->add_scorer<mouse_distance>(window,100,200);
+	color_ai->action_at(0)->add_scorer<mouse_distance>(window,200,1000);
+
+
+	unit test_unit;
+	test_unit.add_decider(default_ai);
+	test_unit.add_decider(color_ai);
 	test_unit.position.y = 200.f;
 
 	while (!glfwWindowShouldClose(window))

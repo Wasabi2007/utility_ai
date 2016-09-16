@@ -25,7 +25,7 @@ INCLUDE_DIRECTORIES(extern/nanovg/src)
 add_library(nano_vg ${NANO_VG_SOURCES})
 
 
-set(SOURCE_FILES src/actor.cpp src/actor.hpp src/scorer.hpp src/action.hpp src/action.cpp src/decider.cpp src/decider.hpp src/action_data.hpp)
+set(SOURCE_FILES src/actor.cpp src/actor.hpp src/scorer.hpp src/action.hpp src/action.cpp src/decider.cpp src/decider.hpp src/action_data.hpp src/composed_action.cpp src/composed_action.hpp)
 add_library(utility_ai ${SOURCE_FILES})
 
 
