@@ -114,20 +114,58 @@ public:
 	}
 };
 
+class chase_mouse : public utility_ai::action{
+private:
+	GLFWwindow* window;
+public:
+	chase_mouse(GLFWwindow* window):window(window){
+
+	}
+	virtual bool execute(utility_ai::actor &a) override {
+		auto& u = static_cast<unit&>(a);
+		double x;
+		double y;
+
+		glfwGetCursorPos(window,&x,&y);
+		vector mouse_pos(x,y);
+		auto velo = nomalize(mouse_pos-u.position);
+		u.velocity = velo*30.f;
+		return true;
+	}
+
+	virtual bool start(utility_ai::actor &a) override {
+		return true;
+	}
+};
+class mouse_distance : public utility_ai::scorer {
+private:
+	GLFWwindow* window;
+	float distance;
+public:
+	mouse_distance(GLFWwindow* window,float distance):window(window),distance(distance){
+
+	}
+	virtual int score(const utility_ai::actor &a) const override {
+		auto& u = static_cast<const unit&>(a);
+		double x;
+		double y;
+
+		glfwGetCursorPos(window,&x,&y);
+		vector mouse_pos(x,y);
+		if(distance > dist(mouse_pos,u.position)){
+			return 100;
+		}
+		return 0;
+	}
+};
+
+
 
 int main()
 {
 	GLFWwindow* window;
 	NVGcontext* vg = NULL;
 	double prevt = 0, cpuTime = 0;
-
-
-	auto patrole_action = std::make_unique<patrole>(vector{200.f,200.f},vector{500.f,200.f});
-	std::shared_ptr<utility_ai::decider> default_ai = std::make_shared<utility_ai::decider>(std::move(patrole_action));
-	unit test_unit(default_ai);
-	test_unit.position.y = 200.f;
-
-	glewExperimental = GL_TRUE;
 
 	if (!glfwInit()) {
 		printf("Failed to init GLFW.");
@@ -169,6 +207,12 @@ int main()
 
 	glfwSetTime(0);
 	prevt = glfwGetTime();
+
+	auto patrole_action = std::make_unique<patrole>(vector{200.f,200.f},vector{500.f,200.f});
+	std::shared_ptr<utility_ai::decider> default_ai = std::make_shared<utility_ai::decider>(std::move(patrole_action));
+	default_ai->add_action<chase_mouse>(window)->add_scorer<mouse_distance>(window,100);
+	unit test_unit(default_ai);
+	test_unit.position.y = 200.f;
 
 	while (!glfwWindowShouldClose(window))
 	{
