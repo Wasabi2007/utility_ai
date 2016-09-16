@@ -14,7 +14,7 @@ namespace utility_ai {
 		virtual bool execute(actor &a) override;
 		template <typename T,typename ... ARGS>
 		composed_action& add_action(ARGS&&... args){
-			auto act = std::make_shared<T>(args...);
+			auto act = std::make_shared<T>(std::forward<ARGS>(args)...);
 			actions.push_back(act);
 			return *this;
 		};
