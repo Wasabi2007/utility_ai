@@ -25,7 +25,7 @@ namespace utility_ai {
 		action_data_ = std::move(data);
 	}
 
-	std::shared_ptr<decider> actor::at(size_t index) {
+	decider* actor::at(size_t index) {
 		return decider_.at(index);
 	}
 
@@ -33,9 +33,8 @@ namespace utility_ai {
 		return decider_.size();
 	}
 
-	actor &actor::add_decider(std::shared_ptr<decider>& d) {
+	void actor::add_decider(decider* d) {
 		decider_.emplace_back(d);
-		decider_action_.emplace_back();
-		return *this;
+		decider_action_.emplace_back(nullptr);
 	}
 }

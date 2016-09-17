@@ -13,8 +13,8 @@ namespace utility_ai {
 		return result;
 	}
 
-	const action &composed_action::action_at(size_t index) const {
-		return *actions.at(index);
+	const action* composed_action::action_at(size_t index) const {
+		return actions.at(index).get();
 	}
 
 	size_t composed_action::action_size() {

@@ -9,17 +9,14 @@
 namespace utility_ai {
 	class composed_action : public action{
 	private:
-		std::vector<std::shared_ptr<action>> actions;
+		std::vector<std::unique_ptr<action>> actions;
 	public:
 		virtual bool execute(actor &a) override;
-		template <typename T,typename ... ARGS>
-		composed_action& add_action(ARGS&&... args){
-			auto act = std::make_shared<T>(std::forward<ARGS>(args)...);
-			actions.push_back(act);
-			return *this;
+		void add_action(std::unique_ptr<action>&& act){
+			actions.emplace_back(std::move(act));
 		};
 
-		const action &action_at(size_t index) const;
+		const action* action_at(size_t index) const;
 
 		size_t action_size();
 	};
