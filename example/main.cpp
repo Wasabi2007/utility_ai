@@ -64,7 +64,7 @@ struct unit:public utility_ai::actor{
 		data.unit_color = NVGcolor{1.f,1.f,1.f,1.f};
 	}
 
-	virtual void update(float dt){
+	void update(float dt){
 		utility_ai::actor::update();
 		position += velocity*dt;
 	}
@@ -225,24 +225,31 @@ int main()
 	glfwSetTime(0);
 	prevt = glfwGetTime();
 
-	std::shared_ptr<utility_ai::decider> default_ai = std::make_shared<utility_ai::decider>();
-	default_ai->add_action<patrole>(vector{200.f,200.f},vector{500.f,200.f}).add_action<chase_mouse>(window);
-	default_ai->action_at(1)->add_scorer<mouse_distance>(window,0,100);
+	std::unique_ptr<utility_ai::decider> default_ai = std::make_unique<utility_ai::decider>();
+	auto patrole_action = std::make_unique<patrole>(vector{200.f,200.f},vector{500.f,200.f});
+	auto chase_action = std::make_unique<chase_mouse>(window);
+	chase_action->add_scorer<mouse_distance>(window,0.f,100.f);
+	default_ai->add_action(std::move(patrole_action));
+	default_ai->add_action(std::move(chase_action));
 
+
+	auto color1 = std::make_unique<change_color>(NVGcolor{1,1,1,1});
+	color1->add_scorer<mouse_distance>(window,200.f,1000.f);
+	auto color2 = std::make_unique<change_color>(NVGcolor{1,0,0,1});
+	color2->add_scorer<mouse_distance>(window,0.f,100.f);
+	auto color3 = std::make_unique<change_color>(NVGcolor{0,1,0,1});
+	color3->add_scorer<mouse_distance>(window,100.f,200.f);
 
 	std::shared_ptr<utility_ai::decider> color_ai = std::make_shared<utility_ai::decider>();
-	color_ai->add_action<change_color>(NVGcolor{1,1,1,1})
-			.add_action<change_color>(NVGcolor{1,0,0,1})
-			.add_action<change_color>(NVGcolor{0,1,0,1});
+	color_ai->add_action(std::move(color1));
+	color_ai->add_action(std::move(color2));
+	color_ai->add_action(std::move(color3));
 
-	color_ai->action_at(1)->add_scorer<mouse_distance>(window,0,100);
-	color_ai->action_at(2)->add_scorer<mouse_distance>(window,100,200);
-	color_ai->action_at(0)->add_scorer<mouse_distance>(window,200,1000);
 
 
 	unit test_unit;
-	test_unit.add_decider(default_ai);
-	test_unit.add_decider(color_ai);
+	test_unit.add_decider(default_ai.get());
+	test_unit.add_decider(color_ai.get());
 	test_unit.position.y = 200.f;
 
 	while (!glfwWindowShouldClose(window))
